@@ -10,13 +10,12 @@ This website is in development, so expect some defects.
 ## Feeds
 
 - RSS: <{{ get_url(path="rss.xml") }}>
-- ATOM: <{{ get_url(path="rss.xml") }}>
 - Calendar: <{{ get_url(path="icalendar.ics") | replace(from="http", to="webcal") | replace(from="https", to="webcal") }}>
 
 ## Source
 
-This project is entirely open source and it is currently hosted at
-<https://github.com/friends0ft/friendfeed>.
+This project is entirely open source and it is currently hosted at:\
+<https://github.com/friends0ft/friendfeed>
 
 Built using [Zola](https://www.getzola.org), a static site engine.
 

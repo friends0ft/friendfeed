@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ get_url(path='style.css') }}">
     {% block rss %}
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ get_url(path='rss.xml', trailing_slash=false) }}">
+    <link rel="alternate" type="text/calendar" title="Calendar" href="{{ get_url(path='calendar.ics', trailing_slash=false) }}">
     {% endblock %}
     <title>friendfeed</title>
   </head>
@@ -18,7 +19,9 @@
 	<div class="container">
 	  <h1 class="site-title">{{ config.title }}
 	    {% if current_path != "/info/" %}
-	    <a href="{{ get_url(path='info') }}">[?]</a>
+	      <a href="{{ get_url(path='info') }}">[?]</a>
+	    {% else %}
+              info
 	    {% endif %}
 	  </h1>
 	  {% block content %}

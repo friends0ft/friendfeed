@@ -4,7 +4,7 @@ base_url = "https://friends0ft.github.io/friendfeed"
 compile_sass = true
 build_search_index = false
 generate_feeds = true
-feed_filenames = [ "atom.xml", "rss.xml", "calendar.ics" ]
+feed_filenames = [ "rss.xml", "calendar.ics" ]
 
 [markdown]
 
