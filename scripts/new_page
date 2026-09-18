@@ -21,10 +21,11 @@ from lib import relative, unflatten_frontmatter, TZ
 
 EXTRA_VERSION = "0.1.0"
 
-DATE_FORMAT = "%-m/%-d/%-y"
+DATE_FORMAT = "%-m/%-d/%y"
 TIME_FORMAT = "%-H:%M"
 TZ_FORMAT = "%z"
 DT_FORMAT = f"{DATE_FORMAT} {TIME_FORMAT} {TZ_FORMAT}"
+PATH_DATE_FORMAT = "%b-%-d-%Y"
 
 LOCAL_NOW = datetime.now()
 LOCAL_TZ = LOCAL_NOW.astimezone().tzinfo
@@ -58,8 +59,17 @@ def imdb(path: str):
     return lambda: imdb_result[path]
 
 
-def utc_now():
+def date_now():
     return lambda: LOCAL_NOW.astimezone(TZ).isoformat()
+
+
+def path():
+    return lambda: "/".join(
+        [
+            LOCAL_NOW.astimezone(TZ).strftime(PATH_DATE_FORMAT),
+            values["_filename"],
+        ]
+    )
 
 
 def weight():
@@ -109,7 +119,7 @@ def title_to_filename():
             return ""
         return c
 
-    return "".join(list(map(map_char, values["title"].lower()))) + ".md"
+    return "".join(list(map(map_char, values["title"])))
 
 
 def yes_no(s):
@@ -151,8 +161,7 @@ FIELDS = [
     ("_scheduled_time", ask("Scheduled time", default="18:00")),
     ("extra.imdb.id", postprocess(ask("IMDb query"), query_imdb)),
     ("title", imdb("name")),
-    ("date", utc_now()),
-    ("weight", weight()),
+    ("date", date_now()),
     ("extra.version", const(EXTRA_VERSION)),
     ("extra.uuid", uuid()),
     ("extra.scheduled_date", combine_date_time()),
@@ -162,6 +171,8 @@ FIELDS = [
     ("extra.imdb.description", imdb("description")),
     ("_poster", imdb("image")),
     ("_filename", ask("File name", default_fn=title_to_filename)),
+    ("path", path()),
+    ("weight", weight()),
     ("_confirm", postprocess(ask("Confirm?", "Y/n"), yes_no)),
 ]
 
@@ -276,7 +287,7 @@ def main():
     frontmatter = unflatten_frontmatter(values)
     frontmatter = tomli_w.dumps(frontmatter).rstrip()
     output = PAGE.format(frontmatter=frontmatter)
-    output_path = relative(f"content/{values["_filename"]}")
+    output_path = relative(f"content/{values["_filename"]}.md")
     with open(output_path, "w") as file:
         file.write(output)
     print(f"saved page: {output_path}")
