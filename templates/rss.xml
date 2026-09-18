@@ -23,8 +23,10 @@
       <item>
 	  {%- if page.components[0] == "today" -%}
               <title>⭐ TODAY: {{ page.title }}</title>
-	  {%- else -%}
+	  {%- elif page.extra.scheduled_date is defined -%}
               <title>{{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format="%A %-m/%-e") }}: {{ page.title }}</title>
+	  {%- else -%}
+	    <title>{{ page.title }}</title>
 	  {%- endif -%}
           <pubDate>{{ page.date | date(format="%a, %d %b %Y %H:%M:%S %z") }}</pubDate>
           <author>

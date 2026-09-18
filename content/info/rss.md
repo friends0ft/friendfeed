@@ -2,6 +2,8 @@
 title = "Subscribe to the RSS feed!"
 weight = 101
 date = "2026-09-16T12:00:00-06:00"
+extra.uuid = "rss"
+include_in_feeds = false
 +++
 
 This website provides an RSS feed. Subscribing to the feed enables you
