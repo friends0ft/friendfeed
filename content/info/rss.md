@@ -1,6 +1,6 @@
 +++
 title = "Subscribe to the RSS feed!"
-weight = 101
+weight = 100
 date = "2026-09-16T12:00:00-06:00"
 extra.uuid = "rss"
 include_in_feeds = false
