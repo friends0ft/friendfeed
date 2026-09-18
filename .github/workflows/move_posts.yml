@@ -1,0 +1,37 @@
+# .github/workflows/daily-tasks.yml
+
+name: Move pages
+
+on:
+  schedule:
+    - cron: '1 0 * * *'
+      timezone: America/Denver
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  move_pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Execute move_pages script
+        run: |
+            pip install tomli_w
+            ./scripts/move_pages
+
+      - name: Commit and Push Changes
+        run: |
+            # configure user
+            git config --global user.name "${{ github.actor }}"
+            git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+            # stage any file changes to be committed
+            git add --all
+
+            # make commit with staged changes
+            git commit -m 'move pages'
+
+            # push the commit back up to source GitHub repository
+            git push

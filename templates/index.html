@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% set section = get_section(path="today/_index.md") %}
+{% include "section.html" %}
+{% endblock %}

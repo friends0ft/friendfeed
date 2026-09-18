@@ -1,0 +1,306 @@
+#!/usr/bin/env python
+
+import json, subprocess, sys
+from datetime import datetime, timedelta
+from typing import Callable
+from urllib import request
+from uuid import uuid4
+from PIL import Image
+import urllib.parse
+from io import BytesIO
+from base64 import b64encode
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
+import tomli_w
+
+from lib import relative, unflatten_frontmatter, TZ
+
+EXTRA_VERSION = "0.1.0"
+
+DATE_FORMAT = "%-m/%-d/%-y"
+TIME_FORMAT = "%-H:%M"
+TZ_FORMAT = "%z"
+DT_FORMAT = f"{DATE_FORMAT} {TIME_FORMAT} {TZ_FORMAT}"
+
+LOCAL_NOW = datetime.now()
+LOCAL_TZ = LOCAL_NOW.astimezone().tzinfo
+LOCAL_TZ_STR = LOCAL_NOW.astimezone().strftime(TZ_FORMAT)
+LOCAL_TOMORROW = LOCAL_NOW + timedelta(days=1)
+LOCAL_TOMORROW_STR = (LOCAL_NOW + timedelta(days=1)).strftime(DATE_FORMAT)
+TZ_END_OF_THE_WORLD = datetime(2222, 1, 1, tzinfo=TZ)
+
+imdb_result = None
+values = {}
+
+#
+# Populate functions
+#
+
+
+def postprocess(populate_fn: Callable[[], str], postprocess_fn: Callable[[str], str]):
+    return lambda: postprocess_fn(populate_fn())
+
+
+def ask(name, default=None, default_fn=None):
+    d = None
+    if default_fn:
+        d = default_fn
+    elif default:
+        d = lambda: default
+    return lambda: input(f"{name}: [{d()}] " if d else f"{name}: ").strip() or d()
+
+
+def imdb(path: str):
+    return lambda: imdb_result[path]
+
+
+def utc_now():
+    return lambda: LOCAL_NOW.astimezone(TZ).isoformat()
+
+
+def weight():
+    return lambda: int(
+        round((TZ_END_OF_THE_WORLD - _combine_date_time()) / timedelta(hours=1))
+    )
+
+
+def uuid():
+    return lambda: str(uuid4())
+
+
+def const(c):
+    return lambda: c
+
+
+#
+# Postprocess functions
+#
+
+
+def join_list(l):
+    return ", ".join(l)
+
+
+def query_imdb(query):
+    imdb_id = get_imdb_data(query)
+    return imdb_id
+
+
+def _combine_date_time():
+    return datetime.strptime(
+        f"{values["_scheduled_date"]} {values["_scheduled_time"]} {LOCAL_TZ_STR}",
+        DT_FORMAT,
+    ).astimezone(TZ)
+
+
+def combine_date_time():
+    return lambda: _combine_date_time().isoformat()
+
+
+def title_to_filename():
+    def map_char(c):
+        if c == " ":
+            return "-"
+        elif not c.isalnum():
+            return ""
+        return c
+
+    return "".join(list(map(map_char, values["title"].lower()))) + ".md"
+
+
+def yes_no(s):
+    s = s.lower()
+    return s == "y/n" or s == "y" or s == "yes"
+
+
+def iso8601_dur_minutes(iso8601_duration):
+    minutes = 0
+    in_time = False
+    part = ""
+    for c in iso8601_duration:
+        if not in_time:
+            if c != "T":
+                continue
+            in_time = True
+        if c.isdigit() or c == ".":
+            part += c
+        elif c == "H":
+            minutes += int(part) * 60
+            part = ""
+        elif c == "M":
+            minutes += int(part)
+            break
+    return minutes
+
+
+def debug(s):
+    print("DEBUG:", s)
+    return s
+
+
+#
+# Data
+#
+
+FIELDS = [
+    ("_scheduled_date", ask("Scheduled date", default=LOCAL_TOMORROW_STR)),
+    ("_scheduled_time", ask("Scheduled time", default="18:00")),
+    ("extra.imdb.id", postprocess(ask("IMDb query"), query_imdb)),
+    ("title", imdb("name")),
+    ("date", utc_now()),
+    ("weight", weight()),
+    ("extra.version", const(EXTRA_VERSION)),
+    ("extra.uuid", uuid()),
+    ("extra.scheduled_date", combine_date_time()),
+    ("extra.imdb.content_rating", imdb("contentRating")),
+    ("extra.imdb.genres", postprocess(imdb("genre"), join_list)),
+    ("extra.imdb.duration", imdb("duration")),
+    ("extra.imdb.description", imdb("description")),
+    ("_poster", imdb("image")),
+    ("_filename", ask("File name", default_fn=title_to_filename)),
+    ("_confirm", postprocess(ask("Confirm?", "Y/n"), yes_no)),
+]
+
+
+PAGE = """
++++
+{frontmatter}
++++
+
+{{{{ <page_header /> }}}}
+""".lstrip()
+
+#
+# Logic
+#
+
+
+def get_imdb_data(query):
+    global imdb_result
+    print("...")
+    query = urllib.parse.urlencode({"q": query})
+    driver = webdriver.Firefox()
+    driver.install_addon(relative("scripts/ublock.xpi"))
+    driver.get(f"http://www.imdb.com/find/?{query}")
+
+    wait = WebDriverWait(driver, 30)
+    captcha_selector = "#amzn-captcha-verify-button"
+    input_selector = "#suggestion-search"
+
+    first_match = wait.until(
+        EC.any_of(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, captcha_selector)),
+            # search bar = no captcha
+            EC.presence_of_element_located((By.CSS_SELECTOR, input_selector)),
+        ),
+    )
+
+    if first_match.tag_name != "input":
+        first_match.click()
+
+    picked = False
+    while not picked:
+        title = wait.until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, ".hero__primary-text"))
+        )
+        wait.until(
+            lambda _: driver.execute_script("return document.readyState == 'complete'")
+        )
+
+        try:
+            driver.set_script_timeout(3)
+            picked = driver.execute_async_script(
+                """
+                let callback = arguments[arguments.length - 1]; 
+                let button = document.getElementById("imdb_id_picker");
+
+                let meta_og_type = document.querySelector("meta[property='og:type']");
+                if (!meta_og_type || meta_og_type.getAttribute("content") != "video.movie") {
+                  callback(false);
+                  return;
+                }
+
+                if (!button) {
+                    let title = arguments[0];
+                    let parent = title.parentNode;
+                    button = document.createElement("button");
+                    button.id = "imdb_id_picker";
+                    button.innerText = "PICK";
+                    button.style.background = "red";
+                    button.style.marginRight = "0.3em";
+                    button.style.marginBottom = "0.8em";
+                    button.style.padding = "0.3em";
+                    button.style.cursor = "pointer";
+                    button.style.borderRadius = "0.2em";
+                    parent.insertBefore(button, title);
+                }
+
+                button.onclick = () => {
+                    callback(true)
+                }
+                """,
+                title,
+            )
+        except:
+            pass
+
+    payload = wait.until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "script[type='application/ld+json']")
+        ),
+    ).get_attribute("innerText")
+    imdb_id = wait.until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "meta[property='imdb:pageConst']")
+        ),
+    ).get_attribute("content")
+
+    driver.quit()
+    imdb_result = json.loads(payload)
+
+    return imdb_id
+
+
+def main():
+    global values
+    for field in FIELDS:
+        values[field[0]] = field[1]()
+    if not values["_confirm"]:
+        sys.exit()
+    print("--------------------")
+
+    frontmatter = unflatten_frontmatter(values)
+    frontmatter = tomli_w.dumps(frontmatter).rstrip()
+    output = PAGE.format(frontmatter=frontmatter)
+    output_path = relative(f"content/{values["_filename"]}")
+    with open(output_path, "w") as file:
+        file.write(output)
+    print(f"saved page: {output_path}")
+
+    image_path = relative(f"static/poster/{values["extra.imdb.id"]}.jpg")
+    request.urlretrieve(values["_poster"], image_path)
+    print(f"saved poster: {image_path}")
+    resized_image = Image.open(image_path)
+    w, h = resized_image.size
+    resized_image = resized_image.resize((int(w * (300 / h)), 300), Image.LANCZOS)
+    buf = BytesIO()
+    resized_image.save(buf, format="WEBP", quality=90, method=6)
+    image_base64_data = b64encode(buf.getvalue()).decode("utf-8")
+    base64_path = relative(f"static/poster/{values["extra.imdb.id"]}.webp.base64")
+    with open(base64_path, "w") as file:
+        file.write("data:image/webp;base64,")
+        file.write(image_base64_data)
+    print(f"saved resized, base64 poster: {base64_path}")
+    print("--------------------")
+
+    subprocess.run([relative("scripts/move_pages"), output_path])
+
+
+if __name__ == "__main__":
+    print()
+    main()
+    print()

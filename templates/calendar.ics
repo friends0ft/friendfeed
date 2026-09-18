@@ -1,0 +1,28 @@
+{% set FMT_DATE = "%Y%m%d" -%}
+{% set FMT_TIME = "%H%M00" -%}
+{% set FMT_DTSTART = FMT_DATE ~ "T" ~ FMT_TIME -%}
+{% set FMT_DTEND = FMT_DATE ~ "T230000" -%}
+{% set FMT_DTSTAMP = FMT_DTSTART ~ "Z" -%}
+
+BEGIN:VCALENDAR
+VERSION:2.0
+NAME:{{ config.title }}
+SOURCE;VALUE=URI:{{ get_url(path="calendar.ics") }}
+BEGIN:VTIMEZONE
+TZID:{{ config.extra.TZ }}
+END:VTIMEZONE
+{% for page in pages -%}
+{% if page?.extra?.imdb is undefined  %}{% continue %}{% endif %}
+BEGIN:VEVENT
+UID:{{ page.extra.uuid }}
+SEQUENCE:{{ load_data(url="https://currentmillis.com/time/minutes-since-unix-epoch.php", format="plain", method="GET")}}
+DTSTAMP:{{ page.date | date(timezone="UTC", format=FMT_DTSTAMP) }}
+DTSTART:{{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format=FMT_DTSTART) }}
+DURATION:{{ page.extra.imdb.duration }}
+URL:{{ get_url(path=page.path) }}
+SUMMARY:{{ page.title }}
+DESCRIPTION:{{ page.extra.imdb.description | safe | replace(from="\n", to="\\n") }}
+X-ALT-DESC;FMTTYPE=text/html:{{ page.content | safe | replace(from="\n", to="\\n") }}
+END:VEVENT
+{%- endfor %}
+END:VCALENDAR

@@ -1,0 +1,16 @@
+{% component nav(curr) %}
+{% set links = [ ["upcoming", "upcoming"], ["today", ""], ["past", "past"] ] -%}
+<nav>
+{% for link in links %}
+  <div>
+    <h1>
+      {%- if link[0] == curr -%}
+        {{- link[0] -}}
+      {%- else -%}
+        <a href="{{ get_url(path=link[1]) }}">{{- link[0] -}}</a>
+      {%- endif -%}
+    </h1>
+  </div>
+{% endfor %}
+</nav>
+{% endcomponent nav %}

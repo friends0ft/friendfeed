@@ -1,0 +1,42 @@
+<div class="page">
+  <div class="page-title">
+   <h1><a href="{{ page.permalink | safe }}">{{ page.title }}</a></h1>
+   <div class="dates">
+     {%- if page.extra.scheduled_date -%}
+       <p>
+         <b>Scheduled for: </b>
+         {{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format="%b %-d, %-I:%M %p") }}
+       </p>
+     {%- endif -%}
+     {%- if page.date -%}
+       <p>
+         <b>Posted: </b>
+         {{- page.date | date(timezone=config.extra.TZ, format="%b %-d, %-I:%M %p") -}}
+       </p>
+     {% endif %}
+    </div>
+  </div>
+  {{ page.content | safe }}
+</div>
+
+{% component page_header(@config, @page, height: integer = 300) %}
+{% set image_path = "poster/" ~ page.extra.imdb.id ~ ".webp.base64" %}
+<div class="page-header">
+  <img alt="movie poster" src="{{ load_data(path=image_path) }}" />
+  <br class="rss-only">
+  {%- if page.extra.scheduled_date -%}
+    <b>{{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format="%A at %-I:%M %p") }}</b>
+  {%- endif -%}
+  {%- if page.extra.imdb.genres -%}
+    <p><i>{{ page.extra.imdb.description }}</i></p>
+  {%- endif -%}
+  {%- if page.extra.imdb.genres -%}
+    <p><b>Genres:</b> {{ page.extra.imdb.genres }}</p>
+  {%- endif -%}
+  {%- if page.extra.imdb.content_rating -%}
+    <p><b>Content rating:</b> {{ page.extra.imdb.content_rating }}</p>
+  {%- endif -%}
+  <p><a href="{{ 'https://www.imdb.com/title/' ~ page.extra.imdb.id }}">IMDb</a></p>
+  <hr class="rss-only">
+</div>
+{% endcomponent %}

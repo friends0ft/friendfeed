@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+import shutil, os, sys
+from datetime import datetime, date
+from glob import glob
+from pathlib import Path
+
+from lib import cd, TZ
+
+SECTION_DIRS = ["upcoming", "today", "past"]
+TODAY = datetime.now(TZ).date()
+
+
+def get_dt(path: Path):
+    frontmatter_started = False
+    with open(path, "r") as file:
+        for line in file:
+            line = line.strip()
+            if line == "+++":
+                if frontmatter_started:
+                    return None
+                frontmatter_started = True
+            if "scheduled_date" in line:
+                date = line.split('"')[-2]
+                return datetime.fromisoformat(date).astimezone(TZ)
+
+
+def get_dst(basename: str, date):
+    in_section = lambda section: Path(section) / basename
+    if date > TODAY:
+        return in_section("upcoming")
+    elif date < TODAY:
+        return in_section("past")
+    return in_section("today")
+
+
+def main():
+    cd("content")
+    files = sys.argv[1:]
+    skip = []  # [path, reason]
+    move = []  # [src, dst]
+
+    if not files:
+        for section in map(lambda s: Path(s), SECTION_DIRS):
+            for src in glob(str(section / "*.md")):
+                files.append(src)
+    for src in files:
+        print(f"found: {src}")
+        src = Path(src)
+        if src.name == "index.md" or src.name == "_index.md":
+            skip.append((src, "exempt"))
+            continue
+        dt = get_dt(src)
+        if not dt:
+            skip.append((src, "no date"))
+            continue
+        dst = get_dst(src.name, dt.astimezone(TZ).date())
+        if dst == src:
+            skip.append((src, "no move needed"))
+            continue
+        move.append((src, dst))
+
+    for src, reason in skip:
+        print(f"skipped: {src} - {reason}")
+    if not move:
+        print("nothing to move")
+    for src, dst in move:
+        print(f"move: {src} --> {dst}")
+        shutil.move(src, dst)
+    print("done")
+
+
+if __name__ == "__main__":
+    main()

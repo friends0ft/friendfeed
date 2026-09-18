@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {{ <nav curr={section.title} /> }}
+  {% if not section.pages %}
+    <center><i>nothing...</i></center>
+  {% endif %}
+  {% if paginator %}
+    {% for page in paginator.pages %}
+	{% include "post.html" %}
+    {% endfor %}
+  {% else %}
+    {% for page in section.pages %}
+      {% include "post.html" %}
+    {% endfor %}
+  {% endif %}
+
+  {% if paginator and paginator.number_pagers > 1 %}
+    <div class="pager">
+      {% set left = "⬅" %}
+      {% set right = "➡" %}
+      {% if paginator.previous %}
+        <a class="previous" href="{{ paginator.previous }}">{{ left }}</a>
+      {% else %}
+        <a class="previous">{{ left }}</a>
+      {% endif %}
+      <p class="current">{{ paginator.current_index }}</p>
+      {% if paginator.next %}
+        <a class="next" href="{{ paginator.next }}">{{ right }}</a>
+      {% else %}
+        <a class="next">{{ right }}</a>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock content %}
+
