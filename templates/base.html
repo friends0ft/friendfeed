@@ -16,7 +16,11 @@
   <body>
     <section class="section">
 	<div class="container">
-	  <h1 class="site-title">{{ config.title }} <a href="{{ get_url(path='info') }}">?</a></h1>
+	  <h1 class="site-title">{{ config.title }}
+	    {% if current_path != "/info/" %}
+	    <a href="{{ get_url(path='info') }}">[?]</a>
+	    {% endif %}
+	  </h1>
 	  {% block content %}
           {% endblock content %}
 	</div>
