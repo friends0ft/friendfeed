@@ -2,8 +2,9 @@
 
 {% block content %}
   {{ <nav curr={section.title} /> }}
+  {{ <motd /> }}
   {% if not section.pages %}
-    <center><i>nothing...</i></center>
+    <center style="margin-top: 3em"><i>nothing...</i></center>
   {% endif %}
   {% if paginator %}
     {% for page in paginator.pages %}

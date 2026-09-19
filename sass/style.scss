@@ -3,7 +3,7 @@ $padding-x: 4.65rem;
 $link-color: #888;
 
 $shadow-ratio: 5 / 7;
-$shadow-opacity: 0.15;
+$shadow-opacity: 0.125;
 @function shadow($length) {
     @return ($length * $shadow-ratio) $length rgba(black, $shadow-opacity);
 }
@@ -40,6 +40,9 @@ body {
 	font-weight: normal;
 	letter-spacing: -0.1em;
 	color: $link-color;
+
+	font-size: 0.9em;
+	vertical-align: top;
     }
 }
 
@@ -82,9 +85,47 @@ nav {
     box-shadow: shadow(0.7rem);
 
     + .page {
-	margin-top: 2.5rem;
+	margin-top: 2.25rem;
     }
 }
+
+.motd {
+    position: relative;
+    padding-top: 0;
+    padding-bottom: 0;
+
+    > svg {
+	position: absolute;
+	top: 0.6em;
+	right: 0.6em;
+	width: 0.9em;
+	height: 0.9em;
+
+	> path {
+	    fill: #999;
+	}
+    }
+
+    .motd-title {
+	position: relative;
+	left: -1em;
+	margin-top: 0.6em;
+	font-size: 0.825em;
+	font-weight: bold;
+	color: #888;
+
+	> a {
+	    text-decoration: none;
+	    font-size: 0.9em;
+	    vertical-align: top;
+
+	    &:visited {
+		color: #999;
+	    }
+	}
+    }
+}
+
 
 .page-title {
     display: flex;

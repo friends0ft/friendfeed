@@ -1,0 +1,15 @@
+{% component motd() %}
+{% set page = get_page(path="motd.md") %}
+{% if page.extra.show %}
+<div class="page motd">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" data-name="Layer 1" viewBox="0 0 24 24">
+  <path d="M16.54.003a2.57 2.57 0 0 0-1.489.439 2.5 2.5 0 0 0-.319 3.806l.647.646-3.621 3.64-1.268-.311a7.48 7.48 0 0 0-7.154 1.941l-.353.354 4.287 4.287-6.367 6.349L.15 23.85l2.696-.752 6.368-6.348 4.268 4.268.352-.353a7.48 7.48 0 0 0 1.942-7.146l-.312-1.276 3.62-3.64.57.571a2.58 2.58 0 0 0 3.293.346 2.5 2.5 0 0 0 .318-3.805L18.344.788A2.58 2.58 0 0 0 16.54.003"/>
+</svg>
+  <p class="motd-title">
+    MESSAGE OF THE DAY
+    <a href="https://en.wikipedia.org/wiki/Message_of_the_day">[?]</a>
+  </p>
+{{ page.content | safe }}
+</div>
+{% endif %}
+{% endcomponent motd %}
