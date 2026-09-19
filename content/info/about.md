@@ -10,7 +10,7 @@ This website is in development, so expect some defects.
 ## Feeds
 
 - RSS: <{{ get_url(path="rss.xml") }}>
-- Calendar: <{{ get_url(path="calendar.ics") | replace(from="http", to="webcal") | replace(from="https", to="webcal") }}>
+- Calendar: <{{ get_url(path="calendar.ics") | replace(from="https", to="webcal") | replace(from="http", to="webcal") }}>
 
 *See [Software Recommendations](@/info/software_recommendations.md)!*
 
