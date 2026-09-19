@@ -5,5 +5,5 @@ from datetime import datetime
 from lib import TZ
 
 print()
-print(datetime.now(TZ).isoformat())
+print(datetime.now(TZ).replace(second=0, microsecond=0).isoformat())
 print()
