@@ -57,17 +57,17 @@ Android users should use
 to sync the calendar. This enables calendar synchronization alongside
 any calendar application.
 
-*Due to Apple's extreme hostility toward open standards and software
-freedom, there are literally zero open source calendar apps for iPhone
-on the App Store.*
+Due to Apple's extreme hostility toward open standards and software
+freedom, there are literally **zero** open source calendar apps for iPhone
+on the App Store.
+
+<small>*Just for reference, there are more than
+[180 results](https://search.f-droid.org/?q=calendar) 
+for "calendar" on the open source app repository for Android.*</small>
 
 [2a]: https://www.thunderbird.net
 [2b]: https://f-droid.org/packages/ws.xsoh.etar
 [2c]: https://f-droid.org/packages/de.jeanlucmakiola.calendula
-
-    
-
-
 
 [^IEA-Energy-and-AI]: International Energy Agency. 
 "Key Questions on Energy and AI." 2026,
