@@ -1,4 +1,4 @@
-<div class="page">
+<article class="page">
   <div class="page-title">
    <h1><a href="{{ page.permalink | safe | trim_end(pat="/") }}">{{ page.title }}</a></h1>
    <div class="dates">
@@ -17,7 +17,7 @@
     </div>
   </div>
   {{ page.content | safe }}
-</div>
+</article>
 
 {% component page_header(@config, @page, height: integer = 300) %}
 {% set image_path = "poster/" ~ page.extra.imdb.id ~ ".webp.base64" %}
@@ -37,6 +37,5 @@
     <p><b>Content rating:</b> {{ page.extra.imdb.content_rating }}</p>
   {%- endif -%}
   <p><a href="{{ 'https://www.imdb.com/title/' ~ page.extra.imdb.id }}">IMDb</a></p>
-  <hr class="rss-only">
 </div>
 {% endcomponent %}
