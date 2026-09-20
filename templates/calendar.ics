@@ -14,7 +14,13 @@ DTSTART:{{ page.extra.scheduled_date | date(timezone="UTC", format=FMT_DT) }}
 DURATION:{{ page.extra.imdb.duration }}
 URL:{{ get_url(path=page.path) }}
 SUMMARY:{{ page.title }}
+{%- if page.extra.imdb.content_type == "TVEpisode" %}
+{%- set s = page.extra.imdb.series -%}
+{%- set desc = "Season " ~ s.season ~ ", Episode " ~ s.episode ~ " : " ~ s.episode_name %}
+DESCRIPTION:{{ desc | safe | replace(from="\n", to="\\n") }}
+{% else %}
 DESCRIPTION:{{ page.extra.imdb.description | safe | replace(from="\n", to="\\n") }}
+{% endif -%}
 X-ALT-DESC;FMTTYPE=text/html:{{ page.content | safe | replace(from="\n", to="\\n") }}
 STYLED-DESCRIPTION;VALUE=TEXT:{{ page.content | safe | replace(from="\n", to="\\n") }}
 END:VEVENT
