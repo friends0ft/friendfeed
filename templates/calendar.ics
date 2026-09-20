@@ -18,5 +18,5 @@ DESCRIPTION:{{ page.extra.imdb.description | safe | replace(from="\n", to="\\n")
 X-ALT-DESC;FMTTYPE=text/html:{{ page.content | safe | replace(from="\n", to="\\n") }}
 STYLED-DESCRIPTION;VALUE=TEXT:{{ page.content | safe | replace(from="\n", to="\\n") }}
 END:VEVENT
-{%- endfor %}
+{% endfor -%}
 END:VCALENDAR

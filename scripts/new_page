@@ -20,6 +20,7 @@ import tomli_w
 
 from lib import relative, unflatten_frontmatter, TZ
 
+DEBUG_JS = True
 EXTRA_VERSION = "0.1.0"
 
 DATE_FORMAT = "%-m/%-d/%y"
@@ -57,7 +58,19 @@ def ask(name, default=None, default_fn=None):
 
 
 def imdb(path: str):
-    return lambda: imdb_result[path]
+    return lambda: imdb_result.get(path)
+
+
+def title():
+    return lambda: (
+        imdb_result["name"]
+        if values["extra.imdb.content_type"] != "TVEpisode"
+        else "{} S{:02d}E{:02d}".format(
+            values["extra.imdb.series"]["series_name"],
+            values["extra.imdb.series"]["season"],
+            values["extra.imdb.series"]["episode"],
+        )
+    )
 
 
 def date_now():
@@ -102,6 +115,9 @@ def query_imdb(query):
 
 
 def _combine_date_time():
+    if values["_scheduled_date"].count("/") == 1:
+        values["_scheduled_date"] += "/" + str(LOCAL_NOW.year)[2:]
+
     return datetime.strptime(
         f"{values["_scheduled_date"]} {values["_scheduled_time"]} {LOCAL_TZ_STR}",
         DT_FORMAT,
@@ -161,20 +177,21 @@ FIELDS = [
     ("_scheduled_date", ask("Scheduled date", default=LOCAL_TOMORROW_STR)),
     ("_scheduled_time", ask("Scheduled time", default="18:00")),
     ("extra.imdb.id", postprocess(ask("IMDb query"), query_imdb)),
-    ("title", imdb("name")),
-    ("date", date_now()),
     ("extra.version", const(EXTRA_VERSION)),
     ("extra.uuid", uuid()),
     ("extra.scheduled_date", combine_date_time()),
+    ("extra.imdb.series", imdb("series")),
     ("extra.imdb.content_rating", imdb("contentRating")),
     ("extra.imdb.content_type", imdb("@type")),
     ("extra.imdb.genres", postprocess(imdb("genre"), join_list)),
     ("extra.imdb.duration", imdb("duration")),
     ("extra.imdb.description", imdb("description")),
-    ("_poster", imdb("image")),
+    ("title", title()),
+    ("date", date_now()),
+    ("weight", weight()),
     ("_filename", ask("File name", default_fn=title_to_filename)),
     ("path", path()),
-    ("weight", weight()),
+    ("_poster", imdb("image")),
     ("_confirm", postprocess(ask("Confirm?", "Y/n"), yes_no)),
 ]
 
@@ -222,10 +239,14 @@ def get_imdb_data(query):
 
     js_value = None
     while js_value == None:
+        if DEBUG_JS:
+            imdb_js_path = Path(__file__).resolve().parent / "imdb.js"
+            with open(imdb_js_path, "r") as file:
+                imdb_js = file.read()
+
         wait.until(
             lambda _: driver.execute_script("return document.readyState != 'loading'")
         )
-
         try:
             driver.set_script_timeout(3)
             js_value = driver.execute_async_script(imdb_js)
@@ -248,6 +269,10 @@ def get_imdb_data(query):
     driver.quit()
     imdb_result = json.loads(payload) | js_value
 
+    import pprint
+
+    pprint.pprint(imdb_result)
+
     return imdb_id
 
 
@@ -258,6 +283,9 @@ def main():
     if not values["_confirm"]:
         sys.exit()
     print("--------------------")
+
+    if values["extra.imdb.content_type"] != "TVEpisode":
+        del values["extra.imdb.series"]
 
     frontmatter = unflatten_frontmatter(values)
     frontmatter = tomli_w.dumps(frontmatter).rstrip()

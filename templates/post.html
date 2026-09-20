@@ -35,19 +35,32 @@
 <div class="page-header">
   <img alt="Preview" src="{{ load_data(path=image_path) }}"
     {% if page.extra.imdb.content_type == "TVEpisode" %} class="wide" {% endif %} />
+
   <br class="rss-only">
+
   {%- if page.extra.scheduled_date -%}
     <b>{{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format="%A at %-I:%M %p") }}</b>
   {%- endif -%}
-  {%- if page.extra.imdb.genres -%}
-    <p><i>{{ page.extra.imdb.description }}</i></p>
+
+  {% if page.extra.imdb.content_type == "Movie" %} 
+    {%- if page.extra.imdb.description -%}
+      <p><i>{{ page.extra.imdb.description }}</i></p>
+    {%- endif -%}
+  {% else %}
+    {%- if page.extra.imdb.series -%}
+      {% set s = page.extra.imdb.series %}
+      <p><i>Season {{ s.season }}, Episode {{ s.episode }}: "{{ s.episode_name }}"</i></p>
+    {%- endif -%}
   {%- endif -%}
+
   {%- if page.extra.imdb.genres -%}
     <p><b>Genres:</b> {{ page.extra.imdb.genres }}</p>
   {%- endif -%}
+
   {%- if page.extra.imdb.content_rating -%}
     <p><b>Content rating:</b> {{ page.extra.imdb.content_rating }}</p>
   {%- endif -%}
+
   <p><a href="{{ 'https://www.imdb.com/title/' ~ page.extra.imdb.id }}">IMDb</a></p>
 </div>
 {% endcomponent %}

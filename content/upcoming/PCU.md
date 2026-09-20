@@ -1,13 +1,13 @@
 +++
 title = "PCU"
-date = "2026-09-20T01:51:12.150368-06:00"
+date = "2026-09-20T14:26:56.203318-06:00"
+weight = 1711661
 path = "Sep-20-2026/PCU"
-weight = 1711781
 
 [extra]
 version = "0.1.0"
-uuid = "15d793c2-8a7f-457c-9f34-c2f7cfdbbde8"
-scheduled_date = "2026-09-20T19:00:00-06:00"
+uuid = "4c18c4ea-eb91-477e-89bd-5707cb9b93b7"
+scheduled_date = "2026-09-25T18:45:00-06:00"
 
 [extra.imdb]
 id = "tt0110759"
