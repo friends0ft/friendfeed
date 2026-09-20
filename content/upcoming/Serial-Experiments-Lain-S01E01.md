@@ -25,3 +25,10 @@ series_name = "Serial Experiments Lain"
 +++
 
 {{ <page_header /> }}
+
+## Scheduling
+
+Let's start this series over so that we can get everyone on the same
+page with it. We'll do one episode a week, on Fridays, before the movie.
+
+If this time wouldn't work for you on a recurring basis, let me know.
