@@ -201,7 +201,7 @@ def get_imdb_data(query):
     driver.install_addon(relative("scripts/ublock.xpi"))
     driver.get(f"http://www.imdb.com/find/?{query}")
 
-    wait = WebDriverWait(driver, 30)
+    wait = WebDriverWait(driver, 60)
     captcha_selector = "#amzn-captcha-verify-button"
     input_selector = "#suggestion-search"
 
@@ -220,22 +220,18 @@ def get_imdb_data(query):
     with open(imdb_js_path, "r") as file:
         imdb_js = file.read()
 
-    picked = False
-    while not picked:
+    js_value = None
+    while js_value == None:
         wait.until(
             lambda _: driver.execute_script("return document.readyState != 'loading'")
         )
+
         try:
-
-            imdb_js_path = Path(__file__).resolve().parent / "imdb.js"
-            with open(imdb_js_path, "r") as file:
-                imdb_js = file.read()
-
             driver.set_script_timeout(3)
-            picked = driver.execute_async_script(imdb_js)
+            js_value = driver.execute_async_script(imdb_js)
         except KeyboardInterrupt:
             exit()
-        except:
+        except Exception as e:
             pass
 
     payload = wait.until(
@@ -250,7 +246,7 @@ def get_imdb_data(query):
     ).get_attribute("content")
 
     driver.quit()
-    imdb_result = json.loads(payload)
+    imdb_result = json.loads(payload) | js_value
 
     return imdb_id
 

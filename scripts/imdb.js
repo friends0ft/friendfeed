@@ -6,10 +6,6 @@ if (meta_og_type) {
   meta_og_type = meta_og_type.getAttribute("content");
 }
 
-console.log("------------------");
-console.log(meta_og_type);
-console.log("------------------");
-
 let buttonAction = (() => {
   switch (meta_og_type) {
     case "video.movie":
@@ -30,14 +26,43 @@ let buttonAction = (() => {
 })();
 
 if (!buttonAction) {
-  callback(false);
+  callback(null);
   throw new Error("no button action");
 }
 
+function getDataTestIdInnerText(testid) {
+  return document.querySelector(`div[data-testid='${testid}']`).innerText;
+}
+
+function onClick() {
+  let val = (() => {
+    if (meta_og_type == "video.movie") {
+      return {};
+    } else if (meta_og_type == "video.episode") {
+      let seriesName = getDataTestIdInnerText("hero-title-block__series-link");
+      let episodeName = getDataTestIdInnerText("hero__primary-text");
+      let seasonEpisode = getDataTestIdInnerText(
+        "hero-subnav-bar-season-episode-numbers-section",
+      )
+        .replace("S", "")
+        .replace("E", "")
+        .split(".");
+
+      return {
+        series_name: seriesName,
+        episode_name: episodeName,
+        season: seasonEpisode[0],
+        episode: seasonEpisode[1],
+      };
+    } else {
+      return null;
+    }
+  })();
+  callback(val);
+}
+
 if (button) {
-  button.onclick = () => {
-    callback(true);
-  };
+  button.onclick = onClick;
 }
 
 if (!button) {
@@ -60,9 +85,8 @@ if (!button) {
   document.body.style.paddingTop = "3em";
 
   if (buttonAction.pickable) {
-    button.onclick = () => {
-      callback(true);
-    };
+    button.onclick = onClick;
+    button.style.pointerEvents = "initial";
   } else {
     button.style.pointerEvents = "none";
   }
