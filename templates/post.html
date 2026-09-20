@@ -1,28 +1,40 @@
 <article class="page">
+  {% if page?.extra?.pinned %}
+  {{ <pin_icon /> }}
+  {% endif %}
   <div class="page-title">
-   <h1><a href="{{ page.permalink | safe | trim_end(pat="/") }}">{{ page.title }}</a></h1>
-   <div class="dates">
-     {%- if page.extra.scheduled_date -%}
-       <p>
-         <b>Scheduled for: </b>
-         {{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format="%b %-d, %-I:%M %p") }}
-       </p>
-     {%- endif -%}
-     {%- if page.date -%}
-       <p>
-         <b>Posted: </b>
-         {{- page.date | date(timezone=config.extra.TZ, format="%b %-d, %-I:%M %p") -}}
-       </p>
-     {% endif %}
+  <h1><a href="{{ page.permalink | safe | trim_end(pat="/") }}">{{ page.title }}</a></h1>
+  {% if not page?.extra?.pinned %}  
+    <div class="dates">
+       {%- if page.extra.scheduled_date -%}
+         <p>
+           <b>Scheduled for: </b>
+           {{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format="%b %-d, %-I:%M %p") }}
+         </p>
+       {%- endif -%}
+       {%- if page.date -%}
+         <p>
+           <b>Posted: </b>
+           {{- page.date | date(timezone=config.extra.TZ, format="%b %-d, %-I:%M %p") -}}
+         </p>
+       {% endif %}
     </div>
+  {% endif %}
   </div>
   {{ page.content | safe }}
 </article>
 
+{% component pin_icon(@page) %}
+<svg class="pin" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="512" height="512" data-name="Layer 1" viewBox="0 0 24 24">
+  <path d="M16.54.003a2.57 2.57 0 0 0-1.489.439 2.5 2.5 0 0 0-.319 3.806l.647.646-3.621 3.64-1.268-.311a7.48 7.48 0 0 0-7.154 1.941l-.353.354 4.287 4.287-6.367 6.349L.15 23.85l2.696-.752 6.368-6.348 4.268 4.268.352-.353a7.48 7.48 0 0 0 1.942-7.146l-.312-1.276 3.62-3.64.57.571a2.58 2.58 0 0 0 3.293.346 2.5 2.5 0 0 0 .318-3.805L18.344.788A2.58 2.58 0 0 0 16.54.003"/>
+</svg>
+{% endcomponent %}
+
 {% component page_header(@config, @page, height: integer = 300) %}
 {% set image_path = "poster/" ~ page.extra.imdb.id ~ ".webp.base64" %}
 <div class="page-header">
-  <img alt="movie poster" src="{{ load_data(path=image_path) }}" />
+  <img alt="Preview" src="{{ load_data(path=image_path) }}"
+    {% if page.extra.imdb.content_type == "TVEpisode" %} class="wide" {% endif %} />
   <br class="rss-only">
   {%- if page.extra.scheduled_date -%}
     <b>{{ page.extra.scheduled_date | date(timezone=config.extra.TZ, format="%A at %-I:%M %p") }}</b>

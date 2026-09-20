@@ -8,6 +8,7 @@ from uuid import uuid4
 from PIL import Image
 import urllib.parse
 from io import BytesIO
+from pathlib import Path
 from base64 import b64encode
 
 from selenium import webdriver
@@ -166,6 +167,7 @@ FIELDS = [
     ("extra.uuid", uuid()),
     ("extra.scheduled_date", combine_date_time()),
     ("extra.imdb.content_rating", imdb("contentRating")),
+    ("extra.imdb.content_type", imdb("@type")),
     ("extra.imdb.genres", postprocess(imdb("genre"), join_list)),
     ("extra.imdb.duration", imdb("duration")),
     ("extra.imdb.description", imdb("description")),
@@ -195,6 +197,7 @@ def get_imdb_data(query):
     print("...")
     query = urllib.parse.urlencode({"q": query})
     driver = webdriver.Firefox()
+    driver.maximize_window()
     driver.install_addon(relative("scripts/ublock.xpi"))
     driver.get(f"http://www.imdb.com/find/?{query}")
 
@@ -213,49 +216,25 @@ def get_imdb_data(query):
     if first_match.tag_name != "input":
         first_match.click()
 
+    imdb_js_path = Path(__file__).resolve().parent / "imdb.js"
+    with open(imdb_js_path, "r") as file:
+        imdb_js = file.read()
+
     picked = False
     while not picked:
-        title = wait.until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, ".hero__primary-text"))
-        )
         wait.until(
-            lambda _: driver.execute_script("return document.readyState == 'complete'")
+            lambda _: driver.execute_script("return document.readyState != 'loading'")
         )
-
         try:
+
+            imdb_js_path = Path(__file__).resolve().parent / "imdb.js"
+            with open(imdb_js_path, "r") as file:
+                imdb_js = file.read()
+
             driver.set_script_timeout(3)
-            picked = driver.execute_async_script(
-                """
-                let callback = arguments[arguments.length - 1]; 
-                let button = document.getElementById("imdb_id_picker");
-
-                let meta_og_type = document.querySelector("meta[property='og:type']");
-                if (!meta_og_type || meta_og_type.getAttribute("content") != "video.movie") {
-                  callback(false);
-                  return;
-                }
-
-                if (!button) {
-                    let title = arguments[0];
-                    let parent = title.parentNode;
-                    button = document.createElement("button");
-                    button.id = "imdb_id_picker";
-                    button.innerText = "PICK";
-                    button.style.background = "red";
-                    button.style.marginRight = "0.3em";
-                    button.style.marginBottom = "0.8em";
-                    button.style.padding = "0.3em";
-                    button.style.cursor = "pointer";
-                    button.style.borderRadius = "0.2em";
-                    parent.insertBefore(button, title);
-                }
-
-                button.onclick = () => {
-                    callback(true)
-                }
-                """,
-                title,
-            )
+            picked = driver.execute_async_script(imdb_js)
+        except KeyboardInterrupt:
+            exit()
         except:
             pass
 

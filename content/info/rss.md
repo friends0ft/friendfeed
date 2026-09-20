@@ -2,8 +2,11 @@
 title = "Subscribe to the RSS feed!"
 weight = 100
 date = "2026-09-16T12:00:00-06:00"
-extra.uuid = "rss"
 include_in_feeds = false
+
+[extra]
+uuid = "rss"
+pinned = true
 +++
 
 This website provides an RSS feed. Subscribing to the feed enables you
@@ -16,7 +19,6 @@ format, initially released in 1999. The specification is authored by
 [RSS Advisory Board](https://www.rssboard.org) and
 offered under the terms of the
 [CC BY-SA 1.0](https://creativecommons.org/licenses/by-sa/1.0/) license.
-
 
 ## Why?
 
