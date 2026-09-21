@@ -34,7 +34,6 @@ pinned = true
 [ "PCU", "1994" ],
 [ "Signs", "2002" ],
 [ "Underworld", "2003" ],
-[ "Wolf of Snow Hollow, The", "2020" ],
 [ "Yojimbo", "1961" ],
 
 ] %}
