@@ -42,7 +42,7 @@ pinned = true
 Here's a list of movies people have recommended for movie night.\
 Send me a text message if you have a high quality submission.
 
-<ul style="columns: 2">
+<ul class="two-columns">
 {% for movie in movies %}
 {% if movie[0] is ending_with(pat=", The") %}
 	{% set movie = ["The " ~ (movie[0] | trim_end(pat=", The")), movie[1]] %}
@@ -50,7 +50,7 @@ Send me a text message if you have a high quality submission.
 <li>
   {{ movie[0] }}
   <span style="opacity: 0.5; font-size: 0.8em; vertical-align: 0.025em">
-    <i>{{ movie[1] }}</i>
+    <i>({{ movie[1] }})</i>
   </span>
 </li>
 {% endfor %}
