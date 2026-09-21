@@ -18,7 +18,7 @@
       <docs>{{ get_url(path="info") }}</docs>
       <language>{{ lang }}</language>
       <atom:link href="{{ feed_url | safe }}" rel="self" type="application/rss+xml"/>
-      {% if last_updated is defined %}<lastBuildDate>{{ last_updated | date(format="%a, %d %b %Y %H:%M:%S %z") }}</lastBuildDate>{% endif %}
+      <lastBuildDate>{{ now() | date(format="%a, %d %b %Y %H:%M:%S %z") }}</lastBuildDate>
       {%- for page in pages %}
       <item>
 	  {%- if page.components[0] == "today" -%}
